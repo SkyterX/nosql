@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using CorrugatedIron;
+using CorrugatedIron.Exceptions;
+using CorrugatedIron.Models;
 using Tweets.Attributes;
 using Tweets.ModelBuilding;
 using Tweets.Models;
@@ -24,18 +26,20 @@ namespace Tweets.Repositories
 
         public void Save(User user)
         {
-            //TODO: Здесь нужно реализовать сохранение пользователя в Riak
+            var userDocument = userDocumentMapper.Map(user);
+            var riakObject = new RiakObject(bucketName, userDocument.Id, userDocument);
+            var putResult = riakClient.Put(riakObject);
+            if (!putResult.IsSuccess)
+                throw new Exception(string.Format("Riak returned an error. Code '{0}'. Message: {1}",
+                    putResult.ResultCode, putResult.ErrorMessage));
         }
 
         public User Get(string userName)
         {
-            //TODO: Здесь нужно доставать пользователя из Riak
-            return new User
-                   {
-                       Name = userName,
-                       DisplayName = "Какой-то пользователь",
-                       ImageUrl = new Uri("http://www.kagms.ru/upload/medialibrary/b3a/no-image-icon-md.jpg")
-                   };
+            var getResult = riakClient.Get(bucketName, userName);
+            if(!getResult.IsSuccess)
+                return null;
+            return userMapper.Map(getResult.Value.GetObject<UserDocument>());
         }
     }
 }
