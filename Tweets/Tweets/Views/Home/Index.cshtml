@@ -1,0 +1,17 @@
+﻿@model Tweets.Models.HomePageViewModel
+
+@{
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+
+@section Login
+{
+    @Html.Partial("LoginBlock", Model.User, new ViewDataDictionary())
+}
+
+@Html.Partial("Messages", Model.Messages, new ViewDataDictionary())
+
+@if (Request.IsAuthenticated)
+{
+    @Html.Partial("NewMessage")
+}
