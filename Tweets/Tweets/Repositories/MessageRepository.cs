@@ -34,7 +34,8 @@ namespace Tweets.Repositories
 
         public void Like(Guid messageId, User user)
         {
-            var likeDocument = new LikeDocument {UserName = user.Name, CreateDate = DateTime.UtcNow};
+            var likeDocument = new LikeDocument { UserName = user.Name, CreateDate = DateTime.UtcNow };
+
             var findQuery = Query.And(
                 Query<MessageDocument>.EQ(d => d.Id, messageId),
                 Query<MessageDocument>.ElemMatch(d => d.Likes, q => q.EQ(like => like.UserName, user.Name)));
@@ -42,8 +43,15 @@ namespace Tweets.Repositories
             if (findResult != null)
                 return;
 
+            findQuery = Query.And(
+                Query<MessageDocument>.EQ(d => d.Id, messageId),
+                Query<MessageDocument>.EQ(d => d.Likes, (IEnumerable<LikeDocument>)null));
+            findResult = messagesCollection.FindOneAs<MessageDocument>(findQuery);
+
             var updateQuery = Query<MessageDocument>.EQ(d => d.Id, messageId);
-            var update = Update<MessageDocument>.AddToSet(d => d.Likes, likeDocument);
+            var update = findResult == null
+                ? Update<MessageDocument>.Push(d => d.Likes, likeDocument)
+                : Update<MessageDocument>.Set(d => d.Likes, new[] { likeDocument });
             messagesCollection.Update(updateQuery, update);
         }
 
