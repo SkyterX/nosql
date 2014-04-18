@@ -38,17 +38,13 @@ namespace Tweets.Repositories
             
             var findQuery = Query.And(
                 Query<MessageDocument>.EQ(d => d.Id, messageId),
-                Query<MessageDocument>.ElemMatch(d => d.Likes, q => q.EQ(like => like.UserName, user.Name)));
-            var findResult = messagesCollection.FindOneAs<MessageDocument>(findQuery);
-            if (findResult != null)
-                return;
-
-            findQuery = Query.And(
-                Query<MessageDocument>.EQ(d => d.Id, messageId),
                 Query<MessageDocument>.EQ(d => d.Likes, (IEnumerable<LikeDocument>) null));
-            findResult = messagesCollection.FindOneAs<MessageDocument>(findQuery);
+            var findResult = messagesCollection.FindOneAs<MessageDocument>(findQuery);
 
-            var updateQuery = Query<MessageDocument>.EQ(d => d.Id, messageId);
+            var updateQuery = Query.And(
+                Query<MessageDocument>.EQ(d => d.Id, messageId),
+                Query.Not(Query<MessageDocument>.ElemMatch(d => d.Likes, q => q.EQ(like => like.UserName, user.Name))));
+
             var update = findResult == null
                 ? Update<MessageDocument>.Push(d => d.Likes, likeDocument)
                 : Update<MessageDocument>.Set(d => d.Likes, new [] {likeDocument});
