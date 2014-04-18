@@ -1,5 +1,4 @@
-﻿using System;
-using ServiceStack.Redis;
+﻿using ServiceStack.Redis;
 using Tweets.ModelBuilding;
 using Tweets.Models;
 
@@ -20,18 +19,14 @@ namespace Tweets.Repositories
 
         public void Save(User user)
         {
-            //TODO: Здесь нужно реализовать сохранение пользователя в Redis
+            var userDocument = userDocumentMapper.Map(user);
+            redisClient.Set(userDocument.Id, userDocument);
         }
 
         public User Get(string userName)
         {
-            //TODO: Здесь нужно доставать пользователя из Redis
-            return new User
-                   {
-                       Name = userName,
-                       DisplayName = "Какой-то пользователь",
-                       ImageUrl = new Uri("http://www.kagms.ru/upload/medialibrary/b3a/no-image-icon-md.jpg")
-                   };
+            var userDocument = redisClient.Get<UserDocument>(userName);
+            return userDocument == null ? null : userMapper.Map(userDocument);
         }
     }
 }
