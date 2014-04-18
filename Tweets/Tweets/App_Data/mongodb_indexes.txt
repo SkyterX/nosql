@@ -1,0 +1,6 @@
+﻿# Check likes == null
+db.messages.ensureIndex( { _id : 1, likes : 1 } )
+# Check likes.contains(userName) 
+db.messages.ensureIndex( { _id : 1, "likes.UserName" : 1 } )
+# Get messages
+db.messages.ensureIndex( { userName : 1, createDate : -1 } )
